@@ -43,11 +43,24 @@ def combine_all_chapters(manga_name, chapters_with_images):
     return combined_path
 
 
-def delete_chapter_folders(chapters_with_images):
-    for _, folder in chapters_with_images:
+def delete_chapter_artifacts(chapters_with_images):
+    for chap_num, folder in chapters_with_images:
+        for extension in (".pdf", ".cbz"):
+            chapter_file = os.path.join(
+                OUTPUT_DIR, f"Chapter_{chap_num}{extension}"
+            )
+            try:
+                os.remove(chapter_file)
+            except FileNotFoundError:
+                pass
+            except OSError as e:
+                print(f"  Warning: couldn't delete {chapter_file}: {e}")
+
         try:
             shutil.rmtree(folder)
-        except Exception as e:
+        except FileNotFoundError:
+            pass
+        except OSError as e:
             print(f"  Warning: couldn't delete {folder}: {e}")
 
 
@@ -138,8 +151,8 @@ def main():
 
         combine_all_chapters(manga_name, chapters_with_images)
 
-        print("Deleting per-chapter folders (their images now live in the CBZ)...")
-        delete_chapter_folders(chapters_with_images)
+        print("Deleting per-chapter files and folders (their images now live in the CBZ)...")
+        delete_chapter_artifacts(chapters_with_images)
         print("Done.")
     else:
         print("Skipped combining. Done.")
